@@ -9,3 +9,17 @@ Pull all git submodules:
 ```sh
 git submodule update --init --recursive
 ```
+
+## Build
+
+With Nix installed, you can run:
+
+```sh
+nix develop '.#fhs-build'
+```
+
+Otherwise, run:
+
+```sh
+./rebuild.sh
+```
