@@ -14,10 +14,8 @@
 
 SET_BAUDRATE='-b 2000000'
 
-# CTNG_VER=xtensa-fdpic
-CTNG_VER=esp-14.2.0_20241119
-# CTNG_CONFIG=xtensa-esp32s3-linux-uclibcfdpic
-CTNG_CONFIG=xtensa-fsf-linux-uclibc
+CTNG_VER=xtensa-fdpic
+CTNG_CONFIG=xtensa-esp32s3-linux-uclibcfdpic
 BUILDROOT_VER=xtensa-2024.08-fdpic
 ESP_HOSTED_VER=ipc-5.1.1
 ESP_HOSTED_CONFIG=sdkconfig.defaults.esp32s3
@@ -27,40 +25,10 @@ function die() {
   exit 1
 }
 
-while :; do
-  case "$1" in
-  -c)
-    conf="$2"
-    . "$conf"
-    shift 2
-    named_config=1
-    ;;
-  *)
-    break
-    ;;
-  esac
-done
-
-if [ -z "$named_config" ]; then
-  [ -f default.conf ] || {
-    echo "Making devkit-c1-8m the default configuration"
-    ln -s devkit-c1-8m.conf default.conf
-  }
-  . default.conf || die "No config selected and default.conf couldn't be loaded"
-fi
+. default.conf || die "No config selected and default.conf couldn't be loaded"
 
 [ -n "$BUILDROOT_CONFIG" ] || die "BUILDROOT_CONFIG is missing"
 [ -n "$ESP_HOSTED_CONFIG" ] || die "ESP_HOSTED_CONFIG is missing"
-
-if [ ! -d autoconf-2.71/root/bin ]; then
-  wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.xz
-  tar -xf autoconf-2.71.tar.xz
-  pushd autoconf-2.71
-  ./configure --prefix=$(pwd)/root
-  make && make install
-  popd
-fi
-export PATH=$(pwd)/autoconf-2.71/root/bin:$PATH
 
 if [ -z "$keep_toolchain$keep_buildroot$keep_rootfs$keep_bootloader" ]; then
   rm -rf build
@@ -83,8 +51,7 @@ export XTENSA_GNU_CONFIG=$(pwd)/xtensa-dynconfig/esp32s3.so
 
 # toolchain
 if [ ! -x crosstool-NG/builds/"$CTNG_CONFIG"/bin/"$CTNG_CONFIG"-gcc ]; then
-  # git clone https://github.com/jcmvbkbc/crosstool-NG.git -b $CTNG_VER
-  git clone https://github.com/espressif/crosstool-NG.git -b $CTNG_VER
+  git clone https://github.com/jcmvbkbc/crosstool-NG.git -b $CTNG_VER
   pushd crosstool-NG
   git apply ../../ncurses.patch
   ./bootstrap && ./configure --enable-local && make
@@ -105,8 +72,8 @@ fi
 if [ ! -d build-buildroot-$BUILDROOT_CONFIG ]; then
   nice make -C buildroot O=$(pwd)/build-buildroot-$BUILDROOT_CONFIG ${BUILDROOT_CONFIG}_defconfig || die "Could not apply buildroot config ${BUILDROOT_CONFIG}_defconfig"
   buildroot/utils/config --file build-buildroot-$BUILDROOT_CONFIG/.config --set-str TOOLCHAIN_EXTERNAL_PATH $(pwd)/crosstool-NG/builds/"$CTNG_CONFIG"
-  buildroot/utils/config --file build-buildroot-$BUILDROOT_CONFIG/.config --set-str TOOLCHAIN_EXTERNAL_PREFIX '$(ARCH)-'"$CTNG_CONFIG"
-  buildroot/utils/config --file build-buildroot-$BUILDROOT_CONFIG/.config --set-str TOOLCHAIN_EXTERNAL_CUSTOM_PREFIX '$(ARCH)-'"$CTNG_CONFIG"
+  buildroot/utils/config --file build-buildroot-$BUILDROOT_CONFIG/.config --set-str TOOLCHAIN_EXTERNAL_PREFIX "$CTNG_CONFIG"
+  buildroot/utils/config --file build-buildroot-$BUILDROOT_CONFIG/.config --set-str TOOLCHAIN_EXTERNAL_CUSTOM_PREFIX "$CTNG_CONFIG"
 fi
 nice make -C buildroot O=$(pwd)/build-buildroot-$BUILDROOT_CONFIG
 [ -f build-buildroot-$BUILDROOT_CONFIG/images/xipImage -a -f build-buildroot-$BUILDROOT_CONFIG/images/rootfs.cramfs -a -f build-buildroot-$BUILDROOT_CONFIG/images/etc.jffs2 ] || exit 1

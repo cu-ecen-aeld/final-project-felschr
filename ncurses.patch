@@ -1,0 +1,15 @@
+diff --git a/configure.ac b/configure.ac
+index 0e891713..a4ade59d 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -325,9 +325,7 @@ AS_IF([test "x$ax_cv_menu" != "xyes" ], [AC_MSG_ERROR([menu library not found])]
+ 
+ AH_BOTTOM([
+ /* Select the correct curses/menu/panel headers */
+-#if defined HAVE_NCURSESW_CURSES_H
+-#  define CURSES_LOC <ncursesw/curses.h>
+-#elif defined HAVE_NCURSESW_H
++#if defined HAVE_NCURSESW_H
+ #  define CURSES_LOC <ncursesw.h>
+ #elif defined HAVE_NCURSES_CURSES_H
+ #  define CURSES_LOC <ncurses/curses.h>

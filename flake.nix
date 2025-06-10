@@ -44,13 +44,19 @@
                 texinfo
                 help2man
 
+                # esp-hosted
+                cmake
                 python3
+                udev
+                libusb1
+                libz
               ]
               ++ pkgs.linux.nativeBuildInputs
             );
           runScript = pkgs.writeShellScript "fhs-build" ''
             echo "Building..."
-            ./rebuild.sh
+            unset LD_LIBRARY_PATH
+            ./rebuild.sh "$@"
             echo "Build finished"
           '';
         };
