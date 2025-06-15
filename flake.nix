@@ -14,6 +14,35 @@
         };
         inherit (pkgs) lib;
 
+        # common Rust environment for motion-handler
+        common = {
+          packages = with pkgs; [
+            espup
+            rustup
+            cargo-espflash
+            espflash
+            ldproxy
+          ];
+
+          env = {
+            RUSTUP_TOOLCHAIN = "esp";
+            CARGO_BUILD_TARGET = "xtensa-esp32s3-none-elf";
+          };
+
+          shellHook = ''
+            export_file="./motion-handler/export-esp.sh"
+            if [[ -f "$export_file" ]]; then
+              echo 1>&2 "Updating Rust toolchain for ESP32-S3..."
+              espup update
+            else
+              echo 1>&2 "Setting up Rust toolchain for ESP32-S3..."
+              espup install --targets esp32s3 --export-file "$export_file"
+            fi
+
+            source "$export_file"
+          '';
+        };
+
         fhs-build = pkgs.buildFHSEnv {
           name = "buildroot-env";
           targetPkgs =
@@ -51,20 +80,38 @@
                 libusb1
                 libz
               ]
+              ++ common.packages
               ++ pkgs.linux.nativeBuildInputs
             );
           runScript = pkgs.writeShellScript "fhs-build" ''
+            unset CC; unset CXX; unset LD_LIBRARY_PATH
+
+            ${common.shellHook}
+
             echo "Building..."
-            unset LD_LIBRARY_PATH
             ./rebuild.sh "$@"
             echo "Build finished"
           '';
         };
       in
       {
-        devShells = {
+        devShells = lib.fix (self: {
           fhs-build = fhs-build.env;
-        };
+          motion-handler = pkgs.mkShell (
+            common.env
+            // {
+              name = "motion-handler-env";
+              packages = common.packages ++ [
+                pkgs.rust-analyzer
+              ];
+
+              shellHook = ''
+                ${common.shellHook}
+              '';
+            }
+          );
+          default = self.motion-handler;
+        });
       }
     );
 }
