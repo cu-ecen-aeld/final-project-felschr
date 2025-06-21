@@ -70,12 +70,16 @@ else
   popd
 fi
 if [ ! -d build-buildroot-$BUILDROOT_CONFIG ]; then
-  nice make -C buildroot O=$(pwd)/build-buildroot-$BUILDROOT_CONFIG ${BUILDROOT_CONFIG}_defconfig || die "Could not apply buildroot config ${BUILDROOT_CONFIG}_defconfig"
+  BUILDROOT_DEFCONFIG=$(pwd)/../external/configs/final_defconfig
+  cp -f "buildroot/configs/${BUILDROOT_CONFIG}_defconfig" "$BUILDROOT_DEFCONFIG"
+  echo "BR2_PACKAGE_MOTION_HANDLER=y" >>"$BUILDROOT_DEFCONFIG"
+
+  nice make -C buildroot O=$(pwd)/build-buildroot-$BUILDROOT_CONFIG BR2_EXTERNAL=$(pwd)/../external final_defconfig || die "Could not apply buildroot config final_defconfig"
   buildroot/utils/config --file build-buildroot-$BUILDROOT_CONFIG/.config --set-str TOOLCHAIN_EXTERNAL_PATH $(pwd)/crosstool-NG/builds/"$CTNG_CONFIG"
   buildroot/utils/config --file build-buildroot-$BUILDROOT_CONFIG/.config --set-str TOOLCHAIN_EXTERNAL_PREFIX "$CTNG_CONFIG"
   buildroot/utils/config --file build-buildroot-$BUILDROOT_CONFIG/.config --set-str TOOLCHAIN_EXTERNAL_CUSTOM_PREFIX "$CTNG_CONFIG"
 fi
-nice make -C buildroot O=$(pwd)/build-buildroot-$BUILDROOT_CONFIG
+nice make -C buildroot O=$(pwd)/build-buildroot-$BUILDROOT_CONFIG BR2_EXTERNAL=$(pwd)/../external
 [ -f build-buildroot-$BUILDROOT_CONFIG/images/xipImage -a -f build-buildroot-$BUILDROOT_CONFIG/images/rootfs.cramfs -a -f build-buildroot-$BUILDROOT_CONFIG/images/etc.jffs2 ] || exit 1
 
 # bootloader
