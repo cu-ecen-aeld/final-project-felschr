@@ -27,3 +27,11 @@ Otherwise, run:
 # do not clean build outputs
 keep_toolchain=y keep_rootfs=y keep_buildroot=y keep_bootloader=y ./rebuild.sh
 ```
+
+## Connect to device
+
+To access the terminal you can connect to the serial port with `screen` and login with user `root`:
+
+```sh
+screen /dev/ttyACM0 115200
+```
