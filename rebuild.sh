@@ -82,6 +82,8 @@ fi
 nice make -C buildroot O=$(pwd)/build-buildroot-$BUILDROOT_CONFIG BR2_EXTERNAL=$(pwd)/../external
 [ -f build-buildroot-$BUILDROOT_CONFIG/images/xipImage -a -f build-buildroot-$BUILDROOT_CONFIG/images/rootfs.cramfs -a -f build-buildroot-$BUILDROOT_CONFIG/images/etc.jffs2 ] || exit 1
 
+device=/dev/ttyACM0
+
 # bootloader
 [ -d esp-hosted ] || git clone https://github.com/jcmvbkbc/esp-hosted -b $ESP_HOSTED_VER
 pushd esp-hosted/esp_hosted_ng/esp/esp_driver
@@ -93,15 +95,15 @@ idf.py set-target esp32s3
 cp $ESP_HOSTED_CONFIG sdkconfig || die "Could not apply IDF config $ESP_HOSTED_CONFIG"
 idf.py build
 read -p 'ready to flash... press enter'
-while ! idf.py $SET_BAUDRATE flash; do
+while ! idf.py -p "$device" $SET_BAUDRATE flash; do
   read -p 'failure... press enter to try again'
 done
 popd
 
 # flash
-parttool.py $SET_BAUDRATE write_partition --partition-name linux --input build-buildroot-$BUILDROOT_CONFIG/images/xipImage
-parttool.py $SET_BAUDRATE write_partition --partition-name rootfs --input build-buildroot-$BUILDROOT_CONFIG/images/rootfs.cramfs
+parttool.py -p "$device" $SET_BAUDRATE write_partition --partition-name linux --input build-buildroot-$BUILDROOT_CONFIG/images/xipImage
+parttool.py -p "$device" $SET_BAUDRATE write_partition --partition-name rootfs --input build-buildroot-$BUILDROOT_CONFIG/images/rootfs.cramfs
 if [ -z "$keep_etc" ]; then
   read -p 'ready to flash /etc... press enter'
-  parttool.py $SET_BAUDRATE write_partition --partition-name etc --input build-buildroot-$BUILDROOT_CONFIG/images/etc.jffs2
+  parttool.py -p "$device" $SET_BAUDRATE write_partition --partition-name etc --input build-buildroot-$BUILDROOT_CONFIG/images/etc.jffs2
 fi
