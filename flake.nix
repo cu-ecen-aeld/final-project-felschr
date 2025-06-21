@@ -103,6 +103,7 @@
               name = "motion-handler-env";
               packages = common.packages ++ [
                 pkgs.rust-analyzer
+                pkgs.screen
               ];
 
               shellHook = ''
