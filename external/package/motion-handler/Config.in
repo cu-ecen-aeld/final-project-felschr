@@ -1,0 +1,5 @@
+config BR2_PACKAGE_MOTION_HANDLER
+	bool "motion-handler"
+	default y
+	help
+	  Includes executable for motion sensor integration.
