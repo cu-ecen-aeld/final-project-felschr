@@ -1,4 +1,2 @@
-debug/
-target/
-
-export-esp.sh
+/motion-handler
+/*.o

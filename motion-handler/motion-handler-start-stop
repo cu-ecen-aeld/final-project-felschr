@@ -1,0 +1,15 @@
+#! /bin/sh
+
+case "$1" in
+    start) 
+        echo "Starting motion-handler"
+        start-stop-daemon -S -n motion-handler -a /usr/bin/motion-handler -- -d
+        ;;
+    stop) 
+        echo "Stopping motion-handler"
+        start-stop-daemon -K -n motion-handler
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+esac
